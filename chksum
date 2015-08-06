@@ -4,9 +4,10 @@
 #
 # Description: Script to check/verify MD5 and SHA checksums.
 #
-_version='0.beta-5';
+_version='0.devel-6';
 _date='2015-08-06';   # August 6, 2015 15:44:10  GMT+01:00
 _copy='Copyright (c) 2015, Eric F'
+
 
 # Help/information
 function __helper()
@@ -38,18 +39,19 @@ $_copy
     -V, --version     Print out the version number.
 
   Examples:
-    $_base md5 1234567890qwerty1234567890qwerty foo.bar
-    $_base sha 1234567890qwerty1234567890qwerty12345678 foo.bar
-    $_base sha256 1234567890qwerty...34567890qwerty1234567890qwerty foo.bar
+    $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
+    $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
+    $_base sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 foo.bar
 
   Example (status):
-    $_base md5 -s 1234567890qwerty1234567890qwerty foo.bar
+    $_base md5 -s d41d8cd98f00b204e9800998ecf8427e foo.bar
 
     \$? will return 0 on success and 1 on no match.
 
 HELP
 
 }
+
 
 # Oops...
 function __err()
@@ -63,6 +65,7 @@ function __err()
 ERR
 }
 
+
 # Check...
 function __chk()
 {
@@ -72,6 +75,7 @@ function __chk()
 		echo -e "$_cyan$_base$_def: WARNING: Missing checksum &/or filename."; exit;
 	fi
 }
+
 
 # Get mode & variables
 function __prepare()
@@ -86,6 +90,7 @@ function __prepare()
 	# Prevent errmode
 	__chk;
 }
+
 
 # Check status mode and verify
 function __verify()
@@ -104,6 +109,7 @@ function __verify()
 	fi
 }
 
+
 # MD5
 function __md5()
 {
@@ -117,6 +123,7 @@ function __md5()
 	# Verify and output
 	__verify "$@";
 }
+
 
 # SHA [sha|sha1|sha224|sha256|sha384|sha512]
 function __sha()
