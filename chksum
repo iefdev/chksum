@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+#
+# /usr/local/xbin/chksum
+#
+# Description: Script to check/verify MD5 and SHA checksums.
+#
+_version='0.beta-5';
+_date='2015-08-06';   # August 6, 2015 15:44:10  GMT+01:00
+_copy='Copyright (c) 2015, Eric F'
+
+# Help/information
+function __helper()
+{
+	cat << HELP
+
+$_base: $_version ($0)
+$_copy
+
+  Usage:
+    $_base <mode> <checksum> <file>
+    $_base [md5|sha|sha1|sha224|sha256|sha384|sha512] [-s] <checksum> <file>
+    $_base [-h|-hl|-V]
+
+  Description:
+    Check a MD5/SHA checksum against a file in a simular way like
+    \`shasum -c\`, but with manual inputs.
+
+  Modes:
+    MD5, SHA* - Using \`shasum -a NNN\` (1 (default), 224, 256, 384, 512)
+
+  Options:
+    -s, --status      No output. A silent mode (returns true/false)
+
+    -h, --help        Print out this information.
+
+    -hl, --helpless   Print out this information using "| less".
+
+    -V, --version     Print out the version number.
+
+  Examples:
+    $_base md5 1234567890qwerty1234567890qwerty foo.bar
+    $_base sha 1234567890qwerty1234567890qwerty12345678 foo.bar
+    $_base sha256 1234567890qwerty...34567890qwerty1234567890qwerty foo.bar
+
+  Example (status):
+    $_base md5 -s 1234567890qwerty1234567890qwerty foo.bar
+
+    \$? will return 0 on success and 1 on no match.
+
+HELP
+
+}
+
+# Oops...
+function __err()
+{
+	cat << ERR
+/**
+ * :» Usage:	$_base md5 [-s] <checksum> <file>
+ * :» Usage:	$_base sha[1|224|256|384|512] [-s] <checksum> <file>
+ * :» Help:	$_base [-h|-hl]
+ */
+ERR
+}
+
+# Check...
+function __chk()
+{
+	if [[ $_sum && $_file ]]; then
+		return 0;
+	else
+		echo -e "$_cyan$_base$_def: WARNING: Missing checksum &/or filename."; exit;
+	fi
+}
+
+# Get mode & variables
+function __prepare()
+{
+	_mode="$1";
+	
+	if [[ $2 =~ (-s|--status) ]]; then shift 2; status_mode=true; else shift; fi
+
+	_sum="$1";
+	_file="$2";
+
+	# Prevent errmode
+	__chk;
+}
+
+# Check status mode and verify
+function __verify()
+{
+	# Status. Only return true or false
+	if [ $status_mode ]; then
+		if [[ $_sum == $_chksum ]]; then true; else false; fi
+	else
+		# Nice output.
+		if [[ $_sum == $_chksum ]]; then 
+			echo -e "$_file:\t\t...$_green OK$_def";
+		else
+			echo -e "$_file:\t\t...$_red FAILED$_def";
+			echo -e "\n$_cyan$_base$_def: WARNING: The checksum ($_red$_sum$_def) did NOT match\n";
+		fi
+	fi
+}
+
+# MD5
+function __md5()
+{
+	# Get mode & variables
+	__prepare "$@";
+
+	# OS X or Linux/*BSD
+	if [[ `type md5 2>/dev/null` ]]; then _chksum=$(md5 -q $_file);
+	elif [[ `type md5sum 2>/dev/null` ]]; then _chksum=$(md5sum $_file | awk '{ print $1 }'); fi
+
+	# Verify and output
+	__verify "$@";
+}
+
+# SHA [sha|sha1|sha224|sha256|sha384|sha512]
+function __sha()
+{
+	# Get mode & variables
+	__prepare "$@";
+
+	# What SHA?
+	if [[ $_mode =~ (sha$|sha1) ]]; then
+		# OS X use 'shasum'
+		if [[ `type shasum 2>/dev/null` ]]; then
+			_chksum=`echo $(shasum $_file) | awk '{ print $1 }'`;
+		elif [[ `type sha1sum 2>/dev/null` ]]; then
+			_chksum=`echo $(sha1sum $_file) | awk '{ print $1 }'`;
+		fi
+	else
+		_mode=`echo $_mode | sed -e 's/^\(sha\)\(.*\)/\-a\ \2\ /g'`;
+
+		# OS X use 'shasum -a NNN'
+		if [[ `type shasum 2>/dev/null` ]]; then
+			_chksum=`echo $(shasum $_mode $_file) | awk '{ print $1 }'`;
+		elif [[ `type ${_mode}sum 2>/dev/null` ]]; then
+			_chksum=`echo $(${_mode}sum $_file) | awk '{ print $1 }'`;
+		fi
+	fi
+
+	# Verify and output
+	__verify "$@";
+}
+
+
+# Vars
+_base=$(basename $0);
+
+# Colors
+_cyan="\033[0;36m";		# cyan = cyan normal color
+_green="\033[0;32m";	# green = green color
+_red="\033[0;31m";		# red = red color
+_def="\033[0m";			# _def = empty color (eg reset)
+
+
+# Let's do this ...
+case $1 in
+	# MD5
+	md5)
+		__md5 "$@";
+		;;
+
+	# SHA
+	sha|sha1|sha224|sha256|sha384|sha512)
+		__sha "$@";
+		;;
+
+	# help
+	-h|--help)
+		__helper;
+		;;
+
+	# helpless
+	-hl|--helpless)
+		__helper | less;
+		;;
+
+	# Version/information
+	-V|--version)
+		echo -e "$_base: version $_version\n$_copy";
+		;;
+
+	# OOps...
+	*)
+		__err;
+		;;
+esac
+
+exit;
