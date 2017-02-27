@@ -1,50 +1,66 @@
 chksum
 ======
 
-A small script to check md5/sha* checksum when downloading something, where they offer a checksum to verify against.
+A script to check/verify checksums. Some sites offer a checksum file, while others offer the checksum to copy (as text) to manually compare against.
 
+Or to create checksum files, like: `fooBar.txt.sha256` or: `CHECKSUMS.rmd160` (batch).
  
 
 ### Install
 
-Put the script in `/usr/local/xbin`, or any folder of your choice. Just make sure it's in `$PATH`.
+Put the script in `/usr/local/bin`, or any folder of your choice. Just make sure it's in `$PATH`.
 
 Give it execute permissions (`chmod +x`).
 
+Or you can use `install`...
+
+    $ sudo install -v -m 755 -o root -g wheel chksum /usr/local/bin
 
 
 ### Usage
 
-	chksum md5 [-s] checksum file
-	chksum sha[1|224|256|384|512] [-s] checksum file
-	chksum [-h|-hl]
+    Verifying:
+      chksum <mode <checksum> <file>
 
--	`-s, --status`.	Will only return true/false (1,0).
+    Creating checksum files:
+      chksum -a <files>
+      chksum -o <mode> <files>
+      chksum -b <mode> <files>
+
+    Modes:
+      md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
+      [!] When creating checksum files... MD5 or SHA[1] are not accepted.
 
 
-
-### Example
+### Examples
 
 Success:
 
-	[me@myhost] ~$ chksum sha da39a3ee5e6b4b0d3255bfef95601890afd80709 test.txt
+    $ chksum sha da39a3ee5e6b4b0d3255bfef95601890afd80709 test.txt
 	test.txt:		... OK
-	[me@myhost] ~$
 
 Error:
 
-	[me@myhost] ~$ chksum sha da39a3ee5e6b4b0d3255bfef95601890afd80708 test.txt
+	$ chksum sha da39a3ee5e6b4b0d3255bfef95601890afd80708 test.txt
 	test.txt:		... FAILED
 
 	chksum: WARNING: The checksum (da39a3ee5e6b4b0d3255bfef95601890afd80708) did NOT match
 
-	[me@myhost] ~$
+Creating files:
+
+    $ chksum -o rmd160 test.txt         // test.txt.rmd160
+    $ chksum -a test.txt                // test.txt.rmd.160 + test.txt.sha256
+    $ chksum -b sha256 test_0{1..5}.txt // CHECKSUMS.sha256 with all in 1 file
+
+_The text format of the output file is:_
+
+    da39a3ee5e6b4b0d3255bfef95601890afd80709 */path/to/test.txt
 
 
+- - -
 
-### Req.
 
-The script is made to use/work with:
+### Changes
 
-- [x] OS X: `md5` and `shasum`
-- [x] Linux/*BSD: `md5sum` and `sha{1,224,256,384,256,512}sum`
+-   Added the fuction(s) to create checksum files,
+-   Moved from `md5/shasum` (OS X) and `md5sum/sha***sum` (GNU), to `openssl` (x-platform) instead.
