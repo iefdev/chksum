@@ -2,51 +2,65 @@
 #
 # /usr/local/xbin/chksum
 #
-# Description: Script to check/verify MD5 and SHA checksums.
+# Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
 #
-_version='0.devel-6';
-_date='2015-08-06';   # August 6, 2015 15:44:10  GMT+01:00
-_copy='Copyright (c) 2015, Eric F'
+_version='1.0';
+_date='2017-02-27';   # February 27, 2017 23:09:00  GMT+01:00
+_copy='Copyright (c) 2017, Eric F'
+
+ERR=0;
+
+
+# Check for openssl
+if [[ ! `type openssl 2>/dev/null` ]]; then
+	echo "OpenSSL is not installed. Aborting...";
+	exit 1;
+fi
 
 
 # Help/information
 function __helper()
 {
 	cat << HELP
+${_base}: ${_version}
+${_copy}
 
-$_base: $_version ($0)
-$_copy
+Description:
+  ${_base} is a script to verify checksums against files. It can also be used to create checksum files (eg /path/to/file.txt.rmd160).
 
-  Usage:
-    $_base <mode> <checksum> <file>
-    $_base [md5|sha|sha1|sha224|sha256|sha384|sha512] [-s] <checksum> <file>
-    $_base [-h|-hl|-V]
+  Since SHA1 is dead/broken (“shattered”), you can only use it to read/verify files, in case you have old files using that. MD5 or SHA1 are NOT accepted options when creating checksums.
 
-  Description:
-    Check a MD5/SHA checksum against a file in a simular way like
-    \`shasum -c\`, but with manual inputs.
+Usage:
+  Verifying:
+    ${_base} <mode <checksum> <file>
+
+  Creating checksum files:
+    ${_base} -a <files>
+    ${_base} -o <mode> <files>
+    ${_base} -b <mode> <files>
+
+  $_base [-h|-hl|-V]
 
   Modes:
-    MD5, SHA* - Using \`shasum -a NNN\` (1 (default), 224, 256, 384, 512)
+    md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
+    [!] When creating checksum files... MD5 or SHA[1] are not accepted.
 
   Options:
-    -s, --status      No output. A silent mode (returns true/false)
-
+    -a, --auto        Will create 2 files of each input (rmd160 + sha256)
+    -o, --out         Will create a checksum file of each input: <file>.<mode>
+    -b, --batch-out   Will create the file CHECKSUMS.<mode> of all inputs
     -h, --help        Print out this information.
-
     -hl, --helpless   Print out this information using "| less".
-
     -V, --version     Print out the version number.
 
-  Examples:
-    $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
-    $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
-    $_base sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 foo.bar
+Examples:
+  $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
+  $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
+  $_base sha256 e3b0c44298fc1c149afbf4c89...truncated foo.bar
 
-  Example (status):
-    $_base md5 -s d41d8cd98f00b204e9800998ecf8427e foo.bar
-
-    \$? will return 0 on success and 1 on no match.
+  $_base -a foo.bar
+  $_base -o rmd160 foo.bar
+  $_base -b foo_0{1..5}.bar
 
 HELP
 
@@ -56,102 +70,83 @@ HELP
 # Oops...
 function __err()
 {
-	cat << ERR
+    cat <<OUT
 /**
- * :» Usage:	$_base md5 [-s] <checksum> <file>
- * :» Usage:	$_base sha[1|224|256|384|512] [-s] <checksum> <file>
- * :» Help:	$_base [-h|-hl]
+ * Usage:
+ *
+ *   Verifying:
+ *     ${_base} <mode <checksum> <file>
+ *
+ *   Creating checksum files:
+ *     ${_base} -a <files>
+ *     ${_base} -o <mode> <files>
+ *     ${_base} -b <mode> <files>
+ *
+ *   $_base [-h|-hl|-V]
  */
-ERR
+
+OUT
+ERR=1
 }
 
 
 # Check...
-function __chk()
+function __dgst()
 {
-	if [[ $_sum && $_file ]]; then
-		return 0;
-	else
-		echo -e "$_cyan$_base$_def: WARNING: Missing checksum &/or filename."; exit;
-	fi
+    if [ -z $_sum ] || [ -z $_file ]; then
+    	echo -e "${_cyan}${_base}${_def}: WARNING: Missing checksum &/or filename.";
+	    return 1;
+    fi
+
+    # Default 'sha' to 'sha1'
+    [[ $_mode == 'sha' ]] && _mode='sha1';
+
+	_chksum=$(openssl dgst -$_mode -r $_file | awk '{ print $1 }');
+
+    # Verify and output
+    if [[ $_sum == $_chksum ]]; then
+        echo -e "${_file}:\t\t...${_green} OK${_def}";
+    else
+        echo -e "${_file}:\t\t...${_red} FAILED${_def}";
+        echo -e "\n${_cyan}${_base}${_def}: WARNING: The checksum ($_red$_sum$_def) did NOT match\n";
+        ERR=1;
+    fi
 }
 
 
-# Get mode & variables
-function __prepare()
+# Create checksum file (eg fooBar.txt.sha256).
+function __mkdgst()
 {
-	_mode="$1";
-	
-	if [[ $2 =~ (-s|--status) ]]; then shift 2; status_mode=true; else shift; fi
+    _opt=$1 && shift 1;
+    [[ ! ${_opt} =~ -a|--auto ]] && _mode=$1 && shift 1;
 
-	_sum="$1";
-	_file="$2";
+    # Do NOT use md5 or sha1 when creating checksums
+    if [[ ${_opt} =~ -a|--auto ]] || [[ ${_mode} =~ sha224|sha256|sha384|sha512|rmd|ripemd160|whirlpool ]]; then
+        _files="$@"
 
-	# Prevent errmode
-	__chk;
-}
+        if [[ ${_opt} =~ -b|--batch-out ]] && [ -f "${1%/**}/CHECKSUMS.${_mode}" ]; then
+            echo -e "${_cyan}${_base}${_def}: Creating backup...";
+            mv -v "${1%/**}/CHECKSUMS.${_mode}"{,.bak};
+        fi
 
+        for file in ${_files[@]}; do
+            [[ ${_opt} =~ -b|--batch-out ]] && _out="${1%/**}/CHECKSUMS" || _out="${file}";
 
-# Check status mode and verify
-function __verify()
-{
-	# Status. Only return true or false
-	if [ $status_mode ]; then
-		if [[ $_sum == $_chksum ]]; then true; else false; fi
-	else
-		# Nice output.
-		if [[ $_sum == $_chksum ]]; then 
-			echo -e "$_file:\t\t...$_green OK$_def";
-		else
-			echo -e "$_file:\t\t...$_red FAILED$_def";
-			echo -e "\n$_cyan$_base$_def: WARNING: The checksum ($_red$_sum$_def) did NOT match\n";
-		fi
-	fi
-}
-
-
-# MD5
-function __md5()
-{
-	# Get mode & variables
-	__prepare "$@";
-
-	# OS X or Linux/*BSD
-	if [[ `type md5 2>/dev/null` ]]; then _chksum=$(md5 -q $_file);
-	elif [[ `type md5sum 2>/dev/null` ]]; then _chksum=$(md5sum $_file | awk '{ print $1 }'); fi
-
-	# Verify and output
-	__verify "$@";
-}
-
-
-# SHA [sha|sha1|sha224|sha256|sha384|sha512]
-function __sha()
-{
-	# Get mode & variables
-	__prepare "$@";
-
-	# What SHA?
-	if [[ $_mode =~ (sha$|sha1) ]]; then
-		# OS X use 'shasum'
-		if [[ `type shasum 2>/dev/null` ]]; then
-			_chksum=`echo $(shasum $_file) | awk '{ print $1 }'`;
-		elif [[ `type sha1sum 2>/dev/null` ]]; then
-			_chksum=`echo $(sha1sum $_file) | awk '{ print $1 }'`;
-		fi
-	else
-		_mode=`echo $_mode | sed -e 's/^\(sha\)\(.*\)/\-a\ \2\ /g'`;
-
-		# OS X use 'shasum -a NNN'
-		if [[ `type shasum 2>/dev/null` ]]; then
-			_chksum=`echo $(shasum $_mode $_file) | awk '{ print $1 }'`;
-		elif [[ `type ${_mode}sum 2>/dev/null` ]]; then
-			_chksum=`echo $(${_mode}sum $_file) | awk '{ print $1 }'`;
-		fi
-	fi
-
-	# Verify and output
-	__verify "$@";
+            # Example: openssl dgst -rmd160 -r -out "file.txt"{.rmd160,};
+            if [[ ${_opt} =~ -a|--auto ]]; then
+                openssl dgst -rmd160 -r -out "${file}"{.rmd160,};
+                openssl dgst -sha256 -r -out "${file}"{.sha256,};
+            elif [[ ${_opt} =~ -b|--batch-out ]]; then
+                openssl dgst -${_mode} -r  "${file}" >> "${_out}.${_mode}";
+            else
+                openssl dgst -${_mode} -r -out "${file}"{.${_mode},};
+            fi
+        done
+    elif [[ ${_mode} =~ md5|sha|sha1 ]]; then
+        echo -e "${_cyan}${_base}${_def}: MD5 or SHA1 are not accepted. Aborting...";
+        __err;
+    fi
+    ERR=$?
 }
 
 
@@ -164,38 +159,41 @@ _green="\033[0;32m";	# green = green color
 _red="\033[0;31m";		# red = red color
 _def="\033[0m";			# _def = empty color (eg reset)
 
+_mode="$1";
+_sum="$2";
+_file="$3";
 
 # Let's do this ...
 case $1 in
-	# MD5
-	md5)
-		__md5 "$@";
-		;;
+    # Verify checksum
+    md5|sha|sha1|sha224|sha256|sha384|sha512|rmd160|ripmd160|whirlspool)
+        __dgst "$@";
+        ;;
 
-	# SHA
-	sha|sha1|sha224|sha256|sha384|sha512)
-		__sha "$@";
-		;;
+    # Creating checksum files
+    -a|--auto|-o|--out|-b|--batch-out)
+        __mkdgst "$@";
+        ;;
 
-	# help
-	-h|--help)
-		__helper;
-		;;
+    # Help
+    -h|--help)
+        __helper;
+        ;;
 
-	# helpless
-	-hl|--helpless)
-		__helper | less;
-		;;
+    # Helpless
+    -hl|--helpless)
+        __helper | less;
+        ;;
 
-	# Version/information
-	-V|--version)
-		echo -e "$_base: version $_version\n$_copy";
-		;;
+    # Version/information
+    -V|--version)
+        echo -e "${_base}: version ${_version}\n${_copy}";
+        ;;
 
-	# OOps...
-	*)
-		__err;
-		;;
+    # Oops...
+    *)
+        __err;
+        ;;
 esac
 
-exit;
+exit ${ERR};
