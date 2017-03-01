@@ -5,7 +5,7 @@
 # Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
 #
 _version='1.0';
-_date='2017-02-27';   # February 27, 2017 23:09:00  GMT+01:00
+_date='2017-03-01';   # March 1, 2017 11:29:35  GMT+01:00
 _copy='Copyright (c) 2017, Eric F'
 
 ERR=0;
@@ -124,13 +124,13 @@ function __mkdgst()
     if [[ ${_opt} =~ -a|--auto ]] || [[ ${_mode} =~ sha224|sha256|sha384|sha512|rmd|ripemd160|whirlpool ]]; then
         _files="$@"
 
-        if [[ ${_opt} =~ -b|--batch-out ]] && [ -f "${1%/**}/CHECKSUMS.${_mode}" ]; then
+        if [[ ${_opt} =~ -b|--batch-out ]] && [ -f $(echo `dirname "$1"`)/CHECKSUMS.${_mode} ]; then
             echo -e "${_cyan}${_base}${_def}: Creating backup...";
-            mv -v "${1%/**}/CHECKSUMS.${_mode}"{,.bak};
+            mv -v $(echo `dirname "$1"`)/CHECKSUMS.${_mode}{,.bak};
         fi
 
         for file in ${_files[@]}; do
-            [[ ${_opt} =~ -b|--batch-out ]] && _out="${1%/**}/CHECKSUMS" || _out="${file}";
+            [[ ${_opt} =~ -b|--batch-out ]] && _out=$(echo `dirname "$1"`)/CHECKSUMS || _out="${file}";
 
             # Example: openssl dgst -rmd160 -r -out "file.txt"{.rmd160,};
             if [[ ${_opt} =~ -a|--auto ]]; then
@@ -154,10 +154,10 @@ function __mkdgst()
 _base=$(basename $0);
 
 # Colors
-_cyan="\033[0;36m";		# cyan = cyan normal color
-_green="\033[0;32m";	# green = green color
-_red="\033[0;31m";		# red = red color
-_def="\033[0m";			# _def = empty color (eg reset)
+_cyan="\033[0;36m";     # cyan = cyan normal color
+_green="\033[0;32m";    # green = green color
+_red="\033[0;31m";      # red = red color
+_def="\033[0m";         # _def = empty color (eg reset)
 
 _mode="$1";
 _sum="$2";
