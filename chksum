@@ -5,7 +5,7 @@
 # Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
 #
 _version='1.0';
-_date='2017-03-01';   # March 1, 2017 11:29:35  GMT+01:00
+_date='2017-05-28';   # May 28, 2017 09:01:40
 _copy='Copyright (c) 2017, Eric F'
 
 ERR=0;
@@ -75,7 +75,7 @@ function __err()
  * Usage:
  *
  *   Verifying:
- *     ${_base} <mode <checksum> <file>
+ *     ${_base} <mode> <checksum> <file>
  *
  *   Creating checksum files:
  *     ${_base} -a <files>
@@ -166,7 +166,7 @@ _file="$3";
 # Let's do this ...
 case $1 in
     # Verify checksum
-    md5|sha|sha1|sha224|sha256|sha384|sha512|rmd160|ripmd160|whirlspool)
+    md5|sha|sha1|sha224|sha256|sha384|sha512|rmd160|ripmd160|whirlpool)
         __dgst "$@";
         ;;
 
