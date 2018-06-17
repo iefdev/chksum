@@ -1,12 +1,15 @@
-chksum
-======
+# chksum
+
+![][licenseBadge]
+
 
 A script to check/verify checksums. Some sites offer a checksum file, while others offer the checksum to copy (as text) to manually compare against.
 
 Or to create checksum files, like: `fooBar.txt.sha256` or: `CHECKSUMS.rmd160` (batch).
+
  
 
-### Install
+## Install
 
 Put the script in `/usr/local/bin`, or any folder of your choice. Just make sure it's in `$PATH`.
 
@@ -14,25 +17,25 @@ Give it execute permissions (`chmod +x`).
 
 Or you can use `install`...
 
-    $ sudo install -v -m 755 -o root -g wheel chksum /usr/local/bin
+    $ sudo install -v -m755 -o0 -g0 chksum /usr/local/bin
 
 
-### Usage
+## Usage
 
     Verifying:
-      chksum <mode <checksum> <file>
+        chksum <mode <checksum> <file>
 
     Creating checksum files:
-      chksum -a <files>
-      chksum -o <mode> <files>
-      chksum -b <mode> <files>
+        chksum -a <files>
+        chksum -o <mode> <files>
+        chksum -b <mode> <files>
 
     Modes:
-      md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
-      [!] When creating checksum files... MD5 or SHA[1] are not accepted.
+        md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
+	    [!] When creating checksum files... MD5 or SHA[1] are not accepted.
 
 
-### Examples
+## Examples
 
 Success:
 
@@ -57,10 +60,22 @@ _The text format of the output file is:_
     da39a3ee5e6b4b0d3255bfef95601890afd80709 */path/to/test.txt
 
 
-- - -
+## License and Info
+
+![][licenseBadge]
+
+[gitlab.com/iEFdev/chksum][gl]
 
 
-### Changes
+## Contributing
 
--   Added the fuction(s) to create checksum files,
--   Moved from `md5/shasum` (OS X) and `md5sum/sha***sum` (GNU), to `openssl` (x-platform) instead.
+1. Fork it (<https://gitlab.com/iEFdev/chksum/forks/new>)
+2. Create your feature branch (`git checkout -b feature/fooBar`)
+3. Commit your changes (`git commit -am 'Add some fooBar'`)
+4. Push to the branch (`git push origin feature/fooBar`)
+5. Create a new Merge Request
+
+
+<!-- Markdown: link & image dfn's -->
+[gl]: https://gitlab.com/iEFdev/chksum
+[licenseBadge]: https://img.shields.io/badge/license-GPL--3.0-orange.svg?style=plastic

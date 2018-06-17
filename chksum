@@ -4,66 +4,69 @@
 #
 # Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
 #
-_version='1.0';
-_date='2017-05-28';   # May 28, 2017 09:01:40
-_copy='Copyright (c) 2017, Eric F'
+
+_version='1.0.1';
+_date='2018-06-17';   # June 17, 2018 13:01:50
+_copy='Copyright (c) 2018, Eric F'
 
 ERR=0;
 
 
 # Check for openssl
 if [[ ! `type openssl 2>/dev/null` ]]; then
-	echo "OpenSSL is not installed. Aborting...";
-	exit 1;
+    echo "OpenSSL is not installed. Aborting...";
+    exit 1;
 fi
 
 
 # Help/information
 function __helper()
 {
-	cat << HELP
+    cat << HELP
 ${_base}: ${_version}
 ${_copy}
 
 Description:
-  ${_base} is a script to verify checksums against files. It can also be used to create checksum files (eg /path/to/file.txt.rmd160).
+    ${_base} is a script to verify checksums against files. It can also be used
+    to create checksum files (eg /path/to/file.txt.rmd160).
 
-  Since SHA1 is dead/broken (“shattered”), you can only use it to read/verify files, in case you have old files using that. MD5 or SHA1 are NOT accepted options when creating checksums.
+    Since SHA1 is dead/broken (“shattered”), you can only use it to read/verify
+    files, in case you have old files using that. MD5 or SHA1 are NOT accepted
+    options when creating checksums.
 
 Usage:
-  Verifying:
-    ${_base} <mode <checksum> <file>
+    Verifying:
+        ${_base} <mode <checksum> <file>
 
-  Creating checksum files:
-    ${_base} -a <files>
-    ${_base} -o <mode> <files>
-    ${_base} -b <mode> <files>
+    Creating checksum files:
+        ${_base} -a <files>
+        ${_base} -o <mode> <files>
+        ${_base} -b <mode> <files>
 
-  $_base [-h|-hl|-V]
+        $_base [-h|-hl|-V]
 
-  Modes:
-    md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
-    [!] When creating checksum files... MD5 or SHA[1] are not accepted.
+    Modes:
+        md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
+        [!] When creating checksum files... MD5 or SHA[1] are not accepted.
 
-  Options:
-    -a, --auto        Will create 2 files of each input (rmd160 + sha256)
-    -o, --out         Will create a checksum file of each input: <file>.<mode>
-    -b, --batch-out   Will create the file CHECKSUMS.<mode> of all inputs
-    -h, --help        Print out this information.
-    -hl, --helpless   Print out this information using "| less".
-    -V, --version     Print out the version number.
+    Options:
+        -a, --auto        Will create 2 files of each input (rmd160 + sha256)
+        -o, --out         Will create a checksum file of each input: <file>.<mode>
+        -b, --batch-out   Will create the file CHECKSUMS.<mode> of all inputs
+        -h, --help        Print out this information.
+        -hl, --helpless   Print out this information using "| less".
+        -V, --version     Print out the version number.
 
 Examples:
-  $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
-  $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
-  $_base sha256 e3b0c44298fc1c149afbf4c89...truncated foo.bar
+    $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
+    $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
+    $_base sha256 e3b0c44298fc1c149afbf4c89...truncated foo.bar
 
-  $_base -a foo.bar
-  $_base -o rmd160 foo.bar
-  $_base -b foo_0{1..5}.bar
+    $_base -a foo.bar
+    $_base -o rmd160 foo.bar
+    $_base -b foo_0{1..5}.bar
 
 HELP
-
 }
 
 
@@ -82,7 +85,7 @@ function __err()
  *     ${_base} -o <mode> <files>
  *     ${_base} -b <mode> <files>
  *
- *   $_base [-h|-hl|-V]
+ *   $_base [ -h | -hl | -V ]
  */
 
 OUT
@@ -94,14 +97,14 @@ ERR=1
 function __dgst()
 {
     if [ -z $_sum ] || [ -z $_file ]; then
-    	echo -e "${_cyan}${_base}${_def}: WARNING: Missing checksum &/or filename.";
-	    return 1;
+        echo -e "${_cyan}${_base}${_def}: WARNING: Missing checksum &/or filename.";
+        return 1;
     fi
 
     # Default 'sha' to 'sha1'
     [[ $_mode == 'sha' ]] && _mode='sha1';
 
-	_chksum=$(openssl dgst -$_mode -r $_file | awk '{ print $1 }');
+    _chksum=$(openssl dgst -$_mode -r $_file | awk '{ print $1 }');
 
     # Verify and output
     if [[ $_sum == $_chksum ]]; then
@@ -142,7 +145,7 @@ function __mkdgst()
                 openssl dgst -${_mode} -r -out "${file}"{.${_mode},};
             fi
         done
-    elif [[ ${_mode} =~ md5|sha|sha1 ]]; then
+    elif [[ ${_mode} =~ ^md5|sha|sha1$ ]]; then
         echo -e "${_cyan}${_base}${_def}: MD5 or SHA1 are not accepted. Aborting...";
         __err;
     fi
@@ -152,6 +155,10 @@ function __mkdgst()
 
 # Vars
 _base=$(basename $0);
+_mode="$1";
+_sum="$2";
+_file="$3";
+
 
 # Colors
 _cyan="\033[0;36m";     # cyan = cyan normal color
@@ -159,9 +166,6 @@ _green="\033[0;32m";    # green = green color
 _red="\033[0;31m";      # red = red color
 _def="\033[0m";         # _def = empty color (eg reset)
 
-_mode="$1";
-_sum="$2";
-_file="$3";
 
 # Let's do this ...
 case $1 in
