@@ -67,15 +67,6 @@ _The text format of the output file is:_
 [gitlab.com/iEFdev/chksum][gl]
 
 
-## Contributing
-
-1. Fork it (<https://gitlab.com/iEFdev/chksum/forks/new>)
-2. Create your feature branch (`git checkout -b feature/fooBar`)
-3. Commit your changes (`git commit -am 'Add some fooBar'`)
-4. Push to the branch (`git push origin feature/fooBar`)
-5. Create a new Merge Request
-
-
 <!-- Markdown: link & image dfn's -->
 [gl]: https://gitlab.com/iEFdev/chksum
 [licenseBadge]: https://img.shields.io/badge/license-GPL--3.0-orange.svg?style=plastic
