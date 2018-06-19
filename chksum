@@ -5,8 +5,8 @@
 # Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
 #
 
-_version='1.0.1';
-_date='2018-06-17';   # June 17, 2018 13:01:50
+_version='1.0.2';
+_date='2018-06-19';   # June 19, 2018 12:45:50
 _copy='Copyright (c) 2018, Eric F'
 
 ERR=0;
@@ -145,7 +145,7 @@ function __mkdgst()
                 openssl dgst -${_mode} -r -out "${file}"{.${_mode},};
             fi
         done
-    elif [[ ${_mode} =~ ^md5|sha|sha1$ ]]; then
+    elif [[ ${_mode} =~ ^md5$|^sha$|^sha1$ ]]; then
         echo -e "${_cyan}${_base}${_def}: MD5 or SHA1 are not accepted. Aborting...";
         __err;
     fi
