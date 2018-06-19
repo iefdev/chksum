@@ -10,6 +10,7 @@
 
 > 2018-06-17
 
--	Misc maintainance
-        - cleaning up, intendation, detab, etc
-        - version bump: v1.0.1
+Misc maintainance:
+
+- Cleaning up, intendation, detab, etc
+- Version bump: v1.0.1
