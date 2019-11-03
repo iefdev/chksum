@@ -2,21 +2,20 @@
 #
 # /usr/local/xbin/chksum
 #
-# Description: Script to check/verify checksums, or to create checksum files (eg fooBar.txt.sha256).
+# Description: Script to check/verify checksums, or to create
+# checksum files (eg fooBar.txt.sha256).
 #
-
-_version='1.0.2';
-_date='2018-06-19';   # June 19, 2018 12:45:50
-_copy='Copyright (c) 2018, Eric F'
 
 ERR=0;
 
+_version='1.0.2';                       # Tag: v1.0.1
+_date='2019-11-03';                     # Nov 3, 2019 05:26:20
+_copy='Copyright (c) 2019, Eric F';
+
 
 # Check for openssl
-if [[ ! `type openssl 2>/dev/null` ]]; then
-    echo "OpenSSL is not installed. Aborting...";
-    exit 1;
-fi
+[[ ! `type openssl 2>/dev/null` ]] && \
+    echo -e ":: OpenSSL is not installed.\n:: Aborting...\n" && exit 1;
 
 
 # Help/information
@@ -30,9 +29,9 @@ Description:
     ${_base} is a script to verify checksums against files. It can also be used
     to create checksum files (eg /path/to/file.txt.rmd160).
 
-    Since SHA1 is dead/broken (“shattered”), you can only use it to read/verify
-    files, in case you have old files using that. MD5 or SHA1 are NOT accepted
-    options when creating checksums.
+    Since SHA1 is broken/shattered, you can only use it to read/verify
+    files, in case you have old files using that. MD5 or SHA1 will not
+    be used when creating checksums.
 
 Usage:
     Verifying:
@@ -43,7 +42,7 @@ Usage:
         ${_base} -o <mode> <files>
         ${_base} -b <mode> <files>
 
-        $_base [-h|-hl|-V]
+        ${_base} [-h|-hl|-V]
 
     Modes:
         md5|sha[1|224|256|384|512]|r[ipe]md160|whirlpool
@@ -58,13 +57,13 @@ Usage:
         -V, --version     Print out the version number.
 
 Examples:
-    $_base md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
-    $_base sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
-    $_base sha256 e3b0c44298fc1c149afbf4c89...truncated foo.bar
+    ${_base} md5 d41d8cd98f00b204e9800998ecf8427e foo.bar
+    ${_base} sha da39a3ee5e6b4b0d3255bfef95601890afd80709 foo.bar
+    ${_base} sha256 e3b0c44298fc1c149afbf4c89...truncated foo.bar
 
-    $_base -a foo.bar
-    $_base -o rmd160 foo.bar
-    $_base -b foo_0{1..5}.bar
+    ${_base} -a foo.bar
+    ${_base} -o rmd160 foo.bar
+    ${_base} -b foo_0{1..5}.bar
 
 HELP
 }
@@ -85,10 +84,11 @@ function __err()
  *     ${_base} -o <mode> <files>
  *     ${_base} -b <mode> <files>
  *
- *   $_base [ -h | -hl | -V ]
+ *   ${_base} [ -h | -hl | -V ]
  */
 
 OUT
+
 ERR=1
 }
 
@@ -104,14 +104,14 @@ function __dgst()
     # Default 'sha' to 'sha1'
     [[ $_mode == 'sha' ]] && _mode='sha1';
 
-    _chksum=$(openssl dgst -$_mode -r $_file | awk '{ print $1 }');
+    _chksum=$(openssl dgst -${_mode} -r ${_file} | awk '{ print $1 }');
 
     # Verify and output
-    if [[ $_sum == $_chksum ]]; then
+    if [[ ${_sum} == ${_chksum} ]]; then
         echo -e "${_file}:\t\t...${_green} OK${_def}";
     else
         echo -e "${_file}:\t\t...${_red} FAILED${_def}";
-        echo -e "\n${_cyan}${_base}${_def}: WARNING: The checksum ($_red$_sum$_def) did NOT match\n";
+        echo -e "\n${_cyan}${_base}${_def}: WARNING: The checksum (${_red}${_sum}${_def}) did NOT match\n";
         ERR=1;
     fi
 }
@@ -120,20 +120,20 @@ function __dgst()
 # Create checksum file (eg fooBar.txt.sha256).
 function __mkdgst()
 {
-    _opt=$1 && shift 1;
-    [[ ! ${_opt} =~ -a|--auto ]] && _mode=$1 && shift 1;
+    _opt=${1} && shift 1;
+    [[ ! ${_opt} =~ -a|--auto ]] && _mode=${1} && shift 1;
 
-    # Do NOT use md5 or sha1 when creating checksums
+    # Don't use md5 or sha1 when creating checksums
     if [[ ${_opt} =~ -a|--auto ]] || [[ ${_mode} =~ sha224|sha256|sha384|sha512|rmd|ripemd160|whirlpool ]]; then
-        _files="$@"
+        _files="$@";
 
-        if [[ ${_opt} =~ -b|--batch-out ]] && [ -f $(echo `dirname "$1"`)/CHECKSUMS.${_mode} ]; then
+        if [[ ${_opt} =~ -b|--batch-out ]] && [ -f $(echo `dirname "${1}"`)/CHECKSUMS.${_mode} ]; then
             echo -e "${_cyan}${_base}${_def}: Creating backup...";
-            mv -v $(echo `dirname "$1"`)/CHECKSUMS.${_mode}{,.bak};
+            mv -v $(echo `dirname "${1}"`)/CHECKSUMS.${_mode}{,.bak};
         fi
 
         for file in ${_files[@]}; do
-            [[ ${_opt} =~ -b|--batch-out ]] && _out=$(echo `dirname "$1"`)/CHECKSUMS || _out="${file}";
+            [[ ${_opt} =~ -b|--batch-out ]] && _out=$(echo `dirname "${1}"`)/CHECKSUMS || _out="${file}";
 
             # Example: openssl dgst -rmd160 -r -out "file.txt"{.rmd160,};
             if [[ ${_opt} =~ -a|--auto ]]; then
@@ -154,11 +154,10 @@ function __mkdgst()
 
 
 # Vars
-_base=$(basename $0);
-_mode="$1";
-_sum="$2";
-_file="$3";
-
+_base=$(basename ${0});
+_mode="${1}";
+_sum="${2}";
+_file="${3}";
 
 # Colors
 _cyan="\033[0;36m";     # cyan = cyan normal color
@@ -167,8 +166,8 @@ _red="\033[0;31m";      # red = red color
 _def="\033[0m";         # _def = empty color (eg reset)
 
 
-# Let's do this ...
-case $1 in
+# Let's go...
+case ${_mode} in
     # Verify checksum
     md5|sha|sha1|sha224|sha256|sha384|sha512|rmd160|ripmd160|whirlpool)
         __dgst "$@";
@@ -179,25 +178,15 @@ case $1 in
         __mkdgst "$@";
         ;;
 
-    # Help
-    -h|--help)
-        __helper;
-        ;;
-
-    # Helpless
-    -hl|--helpless)
-        __helper | less;
-        ;;
-
     # Version/information
     -V|--version)
         echo -e "${_base}: version ${_version}\n${_copy}";
         ;;
 
-    # Oops...
-    *)
-        __err;
-        ;;
+    # Help(less)
+    -h|--help)      __helper;           ;;
+    -hl|--helpless) __helper | less;    ;;
+    *)              __err;              ;;
 esac
 
 exit ${ERR};
