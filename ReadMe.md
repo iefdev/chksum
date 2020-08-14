@@ -1,6 +1,6 @@
 # chksum
 
-![][licenseBadge]
+![][license]
 
 
 A script to check/verify checksums. Some sites offer a checksum file, while others offer the checksum to copy (as text) to manually compare against.
@@ -69,4 +69,4 @@ _The text format of the output file is:_
 
 <!-- Markdown: link & image dfn's -->
 [gl]: https://gitlab.com/iEFdev/chksum
-[licenseBadge]: https://img.shields.io/badge/license-GPL--3.0-orange.svg?style=plastic
+[license]: https://img.shields.io/badge/license-GPL--3.0--or--later-C00?style=plastic
