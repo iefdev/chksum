@@ -2,15 +2,16 @@
 #
 # /usr/local/xbin/chksum
 #
-# Description: Script to check/verify checksums, or to create
-# checksum files (eg fooBar.txt.sha256).
+#
+# Description:
+#   Script to check/verify checksums, or to create
+#   checksum files (eg fooBar.txt.sha256).
 #
 
 ERR=0;
 
-_version='1.0.2';                       # Tag: v1.0.1
-_date='2019-11-03';                     # Nov 3, 2019 05:26:20
-_copy='Copyright (c) 2019, Eric F';
+_version='1.99-20230828';
+_copy='Copyright (c) 2023, Eric F';
 
 
 # Check for openssl
@@ -19,8 +20,7 @@ _copy='Copyright (c) 2019, Eric F';
 
 
 # Help/information
-function __helper()
-{
+function __helper() {
     cat << HELP
 ${_base}: ${_version}
 ${_copy}
@@ -70,8 +70,7 @@ HELP
 
 
 # Oops...
-function __err()
-{
+function __err() {
     cat <<OUT
 /**
  * Usage:
@@ -94,8 +93,7 @@ ERR=1
 
 
 # Check...
-function __dgst()
-{
+function __dgst() {
     if [ -z $_sum ] || [ -z $_file ]; then
         echo -e "${_cyan}${_base}${_def}: WARNING: Missing checksum &/or filename.";
         return 1;
@@ -118,8 +116,7 @@ function __dgst()
 
 
 # Create checksum file (eg fooBar.txt.sha256).
-function __mkdgst()
-{
+function __mkdgst() {
     _opt=${1} && shift 1;
     [[ ! ${_opt} =~ -a|--auto ]] && _mode=${1} && shift 1;
 
@@ -160,10 +157,10 @@ _sum="${2}";
 _file="${3}";
 
 # Colors
-_cyan="\033[0;36m";     # cyan = cyan normal color
-_green="\033[0;32m";    # green = green color
-_red="\033[0;31m";      # red = red color
-_def="\033[0m";         # _def = empty color (eg reset)
+_cyan="\e[0;36m";     # cyan = cyan normal color
+_green="\e[0;32m";    # green = green color
+_red="\e[0;31m";      # red = red color
+_def="\e[0m";         # _def = empty color (eg reset)
 
 
 # Let's go...
